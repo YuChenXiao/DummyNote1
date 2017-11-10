@@ -1,12 +1,14 @@
 package com.example.auser.dummynote1;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
 
-import java.sql.SQLException;
+import java.util.Date;
 
 /**
  * Created by auser on 2017/11/7.
@@ -15,10 +17,9 @@ import java.sql.SQLException;
 public class DB {
     private static final String DATABASE_NAME = "notes.db";
     private static final int DATABASE_VERSION = 2;
-    private static final String DATABASE_TABLE = "notes";
-    private static final String NEW_DATABASE_TABLE = "notes2";
+    private static final String DATABASE_TABLE = "notes2";
     private static final String DATABASE_CREATE =
-            "CREATE TABLE IF NOT EXISTS "+NEW_DATABASE_TABLE+"(_id INTEGER PRIMARY KEY,note TEXT NOT NULL,created INTEGER);";
+    "CREATE TABLE IF NOT EXISTS "+DATABASE_TABLE+"(_id INTEGER PRIMARY KEY,note TEXT NOT NULL,created INTEGER);";
 
 
     private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -58,9 +59,43 @@ public class DB {
     public void close() {
         dbHelper.close();
     }
-    //查詢全部資料表
-    public Cursor getAll(){
-        return db.rawQuery("SELECT * FROM "+NEW_DATABASE_TABLE+"",null);
+    public static final String KEY_ROWID ="_id";
+    public  static final String KEY_NOTE ="note";
+    public  static final String KEY_CREATED ="created";
 
+    String[] strCols = new String[]{
+                KEY_ROWID,KEY_NOTE,KEY_CREATED
+        };
+
+        //查詢全部資料表
+        public Cursor getAll(){
+    //        return db.rawQuery("SELECT * FROM "+NEW_DATABASE_TABLE+"",null);
+            return db.query(DATABASE_TABLE,strCols,null,null,null,null,null);
+        }
+
+        public long create(String noteName){
+            Date now = new Date();
+            ContentValues args =new ContentValues();
+            args.put(KEY_NOTE,noteName);
+            args.put(KEY_CREATED,now.getTime());
+            return db.insert(DATABASE_TABLE,null,args);
+        }
+        public  boolean delete(long rowId){
+            if(rowId>0) {
+                return db.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
+            }else {
+            return db.delete(DATABASE_TABLE,null, null) > 0;
+        }
     }
+
+    public  boolean delete(){
+        return delete(-1);
+    }
+
+    public boolean update(long rowId ,String note){
+        ContentValues args = new ContentValues();
+        args.put(KEY_NOTE,note);
+        return db.update(DATABASE_TABLE,args,KEY_ROWID+"="+rowId,null)>0;
+    }
+
 }
